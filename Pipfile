@@ -1,0 +1,38 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+django = "*"
+python-decouple = "*"
+psycopg2-binary = "*"
+django-crispy-forms = "*"
+crispy-bootstrap5 = "*"
+pillow = "*"
+django-storages = "*"
+django-allauth = "*"
+django-guardian = "*"
+djangorestframework = "*"
+djangorestframework-simplejwt = "*"
+django-cors-headers = "*"
+reportlab = "*"
+weasyprint = "*"
+openpyxl = "*"
+africastalking = "*"
+django-anymail = "*"
+celery = "*"
+redis = "*"
+django-extensions = "*"
+django-import-export = "*"
+django-filter = "*"
+django-tables2 = "*"
+
+[dev-packages]
+black = "*"
+flake8 = "*"
+django-debug-toolbar = "*"
+
+[requires]
+python_version = "3.11"
+python_full_version = "3.11.7"
