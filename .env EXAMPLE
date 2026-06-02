@@ -1,0 +1,28 @@
+SECRET_KEY=your django secret key
+DEBUG=True
+ALLOWED_HOSTS=localhost
+
+# ─────────────────────────────────────────────
+# SACCO IDENTITY
+# ─────────────────────────────────────────────
+SACCO_NAME={name}.SACCO
+
+# ─────────────────────────────────────────────
+# EMAIL (console in dev — no SMTP needed)
+# ─────────────────────────────────────────────
+DEFAULT_FROM_EMAIL=noreply@sacco.local
+
+# ─────────────────────────────────────────────
+# AFRICA'S-TALKING (SMS — sandbox for dev)
+# ─────────────────────────────────────────────
+AT_USERNAME=sandbox
+AT_API_KEY=
+
+# Email
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_HOST_USER=name@gmail.com
+EMAIL_HOST_PASSWORD=yourpassword
+
+# Redis (for Celery)
+CELERY_BROKER_URL=redis local url
