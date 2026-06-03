@@ -1,0 +1,17 @@
+{% extends "base/base.html" %}
+
+{% block sidebar_nav %}
+  <span class="sidebar-section">My Account</span>
+  <a href="{% url 'accounts:member_dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'member_dashboard' %}active{% endif %}">
+    <i class="bi bi-grid-1x2"></i> Dashboard
+  </a>
+  <a href="#" class="sidebar-link"><i class="bi bi-piggy-bank"></i> Savings</a>
+  <a href="#" class="sidebar-link"><i class="bi bi-cash-stack"></i> Loans</a>
+  <a href="#" class="sidebar-link"><i class="bi bi-clock-history"></i> Transactions</a>
+
+  <span class="sidebar-section mt-2">Profile</span>
+  <a href="{% url 'accounts:profile' %}" class="sidebar-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+    <i class="bi bi-person"></i> My Profile
+  </a>
+  <a href="#" class="sidebar-link"><i class="bi bi-file-earmark-text"></i> Statements</a>
+{% endblock %}

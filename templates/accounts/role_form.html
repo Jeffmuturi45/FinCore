@@ -1,0 +1,53 @@
+{% extends "base/superadmin_base.html" %}
+{% block title %}{{ action }} Role{% endblock %}
+{% block topbar_title %}{{ action }} Role{% endblock %}
+
+{% block content %}
+<nav class="breadcrumb-nav">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{% url 'accounts:role_list' %}">Roles</a></li>
+    <li class="breadcrumb-item active">{{ action }}</li>
+  </ol>
+</nav>
+
+<div class="row justify-content-center">
+  <div class="col-12 col-xl-7">
+    <div class="card">
+      <div class="card-header">{{ action }} Role</div>
+      <div class="card-body p-4">
+        <form method="post">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label">Role Name *</label>
+            {{ form.name }}
+            {% if form.name.errors %}<div class="text-danger" style="font-size:.78rem;">{{ form.name.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            {{ form.description }}
+          </div>
+          <div class="mb-3">
+            <div class="form-check">
+              {{ form.is_staff_role }}
+              <label class="form-check-label" for="{{ form.is_staff_role.id_for_label }}">
+                This is a staff role (grants access to staff portal)
+              </label>
+            </div>
+          </div>
+          <div class="mb-4">
+            <label class="form-label">Permissions</label>
+            <div style="max-height:280px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:8px;padding:1rem;">
+              {{ form.permissions }}
+            </div>
+          </div>
+          <hr />
+          <div class="d-flex gap-2 justify-content-end">
+            <a href="{% url 'accounts:role_list' %}" class="btn btn-sacco-outline">Cancel</a>
+            <button type="submit" class="btn btn-sacco">{{ action }} Role</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

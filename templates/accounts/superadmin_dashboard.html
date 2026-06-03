@@ -1,0 +1,105 @@
+{% extends "base/superadmin_base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block topbar_title %}Super Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-header-title">Good day, {{ user.first_name }} 👋</h1>
+    <p class="page-header-subtitle">Here's an overview of the system.</p>
+  </div>
+  <a href="{% url 'accounts:user_create' %}" class="btn btn-sacco">
+    <i class="bi bi-plus-lg me-1"></i> Add User
+  </a>
+</div>
+
+<!-- Stats -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-card-icon green"><i class="bi bi-people-fill"></i></div>
+      <div class="stat-card-value">{{ total_users }}</div>
+      <div class="stat-card-label">Total Users</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-card-icon black"><i class="bi bi-person-check-fill"></i></div>
+      <div class="stat-card-value">{{ total_members }}</div>
+      <div class="stat-card-label">Members</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-card-icon amber"><i class="bi bi-shield-fill-check"></i></div>
+      <div class="stat-card-value">{{ total_roles }}</div>
+      <div class="stat-card-label">Roles</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-card-icon blue"><i class="bi bi-journal-text"></i></div>
+      <div class="stat-card-value">{{ recent_logs|length }}</div>
+      <div class="stat-card-label">Recent Actions</div>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Links + Audit Log -->
+<div class="row g-3">
+  <div class="col-lg-4">
+    <div class="card h-100">
+      <div class="card-header">Quick Actions</div>
+      <div class="card-body d-flex flex-column gap-2 p-3">
+        <a href="{% url 'accounts:user_create' %}" class="btn btn-sacco-outline w-100 text-start">
+          <i class="bi bi-person-plus me-2"></i> Create User
+        </a>
+        <a href="{% url 'accounts:role_create' %}" class="btn btn-sacco-outline w-100 text-start">
+          <i class="bi bi-shield-plus me-2"></i> Create Role
+        </a>
+        <a href="{% url 'accounts:user_list' %}" class="btn btn-sacco-outline w-100 text-start">
+          <i class="bi bi-people me-2"></i> Manage Users
+        </a>
+        <a href="{% url 'accounts:role_list' %}" class="btn btn-sacco-outline w-100 text-start">
+          <i class="bi bi-shield-check me-2"></i> Manage Roles
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="card table-card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        Recent Audit Activity
+        <a href="#" class="btn btn-sm btn-sacco-outline">View All</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Action</th>
+              <th>Description</th>
+              <th>Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in recent_logs %}
+            <tr>
+              <td>{{ log.user.get_display_name|default:"—" }}</td>
+              <td><span class="badge bg-secondary">{{ log.get_action_display }}</span></td>
+              <td style="max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ log.description }}</td>
+              <td style="font-size:.78rem; color:#6b7280;">{{ log.timestamp|timesince }} ago</td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="4" class="text-center text-muted py-4">No activity yet.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

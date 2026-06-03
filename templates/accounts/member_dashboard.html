@@ -1,0 +1,15 @@
+{% extends "base/member_base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block topbar_title %}Member Portal{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-header-title">Hello, {{ user.first_name }} 👋</h1>
+    <p class="page-header-subtitle">Your financial overview</p>
+  </div>
+</div>
+<div class="card p-4 text-center text-muted" style="border-style:dashed;">
+  <i class="bi bi-piggy-bank" style="font-size:2.5rem; color:#1a6b3c; opacity:.4;"></i>
+  <p class="mt-2 mb-0">Member dashboard will show balances, loans and statements as we build each module.</p>
+</div>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base/staff_base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block topbar_title %}Staff Dashboard{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-header-title">Welcome, {{ user.first_name }} 👋</h1>
+    <p class="page-header-subtitle">{{ user.role.name|default:"Staff" }} Portal</p>
+  </div>
+</div>
+<div class="card p-4 text-center text-muted" style="border-style:dashed;">
+  <i class="bi bi-tools" style="font-size:2.5rem; color:#1a6b3c; opacity:.4;"></i>
+  <p class="mt-2 mb-0">Staff dashboard modules coming soon as we build each feature.</p>
+</div>
+{% endblock %}

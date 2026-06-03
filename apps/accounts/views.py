@@ -1,230 +1,282 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
-from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
-from django.contrib.auth import get_user_model
+from django.contrib.auth import login, logout, update_session_auth_hash
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.decorators import method_decorator
+from django.views import View
 
-from .models import Role, AuditLog
 from .forms import (
-    LoginForm, UserCreationForm, UserUpdateForm,
-    AssignRoleForm, RoleForm, CustomPasswordChangeForm,
+    CustomPasswordChangeForm, LoginForm, ProfileForm,
+    RoleForm, UserCreateForm, UserEditForm,
 )
-
-User = get_user_model()
-
-
-# ── Helpers ─────────────────────────────────────────────────────────────────
-def get_client_ip(request):
-    x_forwarded = request.META.get("HTTP_X_FORWARDED_FOR")
-    if x_forwarded:
-        return x_forwarded.split(",")[0].strip()
-    return request.META.get("REMOTE_ADDR")
+from .models import AuditLog, Role, User
+from .decorators import role_required
 
 
-def is_super_admin(user):
-    return user.is_authenticated and user.is_super_admin()
+# ─────────────────────────────────────────────
+# AUTH
+# ─────────────────────────────────────────────
+
+class LoginView(View):
+    template_name = "accounts/login.html"
+
+    def get(self, request):
+        if request.user.is_authenticated:
+            return redirect("accounts:dashboard_redirect")
+        return render(request, self.template_name, {"form": LoginForm()})
+
+    def post(self, request):
+        form = LoginForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            # Using the constant for suspended status
+            if user.status == User.STATUS_SUSPENDED:
+                messages.error(
+                    request, "Your account has been suspended. Contact support.")
+                return render(request, self.template_name, {"form": form})
+            login(request, user)
+            if not form.cleaned_data.get("remember_me"):
+                request.session.set_expiry(0)
+            # Log the action using constant
+            AuditLog.objects.create(
+                user=user,
+                action=AuditLog.ACTION_LOGIN,
+                description=f"{user.get_display_name()} logged in.",
+                ip_address=request.META.get("REMOTE_ADDR"),
+            )
+            # Using correct field name 'must_change_password'
+            if user.must_change_password:
+                messages.warning(
+                    request, "Please change your password before continuing.")
+                return redirect("accounts:change_password")
+            return redirect("accounts:dashboard_redirect")
+        return render(request, self.template_name, {"form": form})
 
 
-def log_action(user, action, description="", ip=None):
-    AuditLog.objects.create(
-        user=user, action=action, description=description, ip_address=ip
-    )
+class LogoutView(LoginRequiredMixin, View):
+    def post(self, request):
+        AuditLog.objects.create(
+            user=request.user,
+            action=AuditLog.ACTION_LOGOUT,
+            description=f"{request.user.get_display_name()} logged out.",
+            ip_address=request.META.get("REMOTE_ADDR"),
+        )
+        logout(request)
+        return redirect("accounts:login")
 
 
-# ── Auth ─────────────────────────────────────────────────────────────────────
-def login_view(request):
-    if request.user.is_authenticated:
-        return redirect("accounts:dashboard")
+class DashboardRedirectView(LoginRequiredMixin, View):
+    """Routes user to the correct portal based on role."""
 
-    form = LoginForm(request, data=request.POST or None)
-    if request.method == "POST" and form.is_valid():
-        user = form.get_user()
-        if not form.cleaned_data.get("remember_me"):
-            request.session.set_expiry(0)   # Session ends on browser close
-        user.last_login_ip = get_client_ip(request)
-        user.save(update_fields=["last_login_ip"])
-        login(request, user)
-        log_action(user, "LOGIN", ip=get_client_ip(request))
+    def get(self, request):
+        portal = request.user.portal
+        if portal == "super_admin":
+            return redirect("accounts:superadmin_dashboard")
+        elif portal == "staff":
+            return redirect("accounts:staff_dashboard")
+        elif portal == "member":
+            return redirect("accounts:member_dashboard")
+        messages.error(
+            request, "No role assigned to your account. Contact an administrator.")
+        return redirect("accounts:login")
 
-        if user.must_change_password:
-            messages.warning(request, "You must change your password before continuing.")
-            return redirect("accounts:change_password")
 
-        return redirect("accounts:dashboard")
+# ─────────────────────────────────────────────
+# DASHBOARDS (stub views — will be filled per module)
+# ─────────────────────────────────────────────
 
-    return render(request, "accounts/login.html", {"form": form})
+@login_required
+def superadmin_dashboard(request):
+    context = {
+        "total_users": User.objects.count(),
+        "total_roles": Role.objects.count(),
+        "total_members": User.objects.filter(role__slug=User.ROLE_MEMBER).count(),
+        "recent_logs": AuditLog.objects.select_related("user").order_by("-timestamp")[:10],
+    }
+    return render(request, "accounts/superadmin_dashboard.html", context)
 
 
 @login_required
-def logout_view(request):
-    log_action(request.user, "LOGOUT", ip=get_client_ip(request))
-    logout(request)
-    messages.success(request, "You have been logged out successfully.")
-    return redirect("accounts:login")
+def staff_dashboard(request):
+    return render(request, "accounts/staff_dashboard.html", {})
 
 
-# ── Dashboard ────────────────────────────────────────────────────────────────
 @login_required
-def dashboard_view(request):
-    return render(request, "accounts/dashboard.html", {"user": request.user})
+def member_dashboard(request):
+    return render(request, "accounts/member_dashboard.html", {})
 
 
-# ── Profile ──────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────
+# PROFILE & PASSWORD
+# ─────────────────────────────────────────────
+
 @login_required
 def profile_view(request):
-    form = UserUpdateForm(request.POST or None, request.FILES or None, instance=request.user)
-    if request.method == "POST" and form.is_valid():
-        form.save()
-        log_action(request.user, "PROFILE_UPDATE", ip=get_client_ip(request))
-        messages.success(request, "Profile updated successfully.")
-        return redirect("accounts:profile")
+    if request.method == "POST":
+        form = ProfileForm(request.POST, request.FILES, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Profile updated successfully.")
+            return redirect("accounts:profile")
+    else:
+        form = ProfileForm(instance=request.user)
     return render(request, "accounts/profile.html", {"form": form})
 
 
 @login_required
 def change_password_view(request):
-    form = CustomPasswordChangeForm(request.user, request.POST or None)
-    if request.method == "POST" and form.is_valid():
-        user = form.save()
-        user.must_change_password = False
-        user.save(update_fields=["must_change_password"])
-        update_session_auth_hash(request, user)
-        log_action(user, "PASSWORD_CHANGE", ip=get_client_ip(request))
-        messages.success(request, "Password changed successfully.")
-        return redirect("accounts:dashboard")
+    if request.method == "POST":
+        form = CustomPasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            user.must_change_password = False
+            user.save(update_fields=["must_change_password"])
+            update_session_auth_hash(request, user)
+            AuditLog.objects.create(
+                user=user,
+                action=AuditLog.ACTION_PASSWORD_CHANGE,
+                description="User changed their password.",
+                ip_address=request.META.get("REMOTE_ADDR"),
+            )
+            messages.success(request, "Password changed successfully.")
+            return redirect("accounts:dashboard_redirect")
+    else:
+        form = CustomPasswordChangeForm(request.user)
     return render(request, "accounts/change_password.html", {"form": form})
 
 
-# ── User Management (Staff/Admin) ────────────────────────────────────────────
-@login_required
-def user_list_view(request):
-    if not request.user.is_staff_member():
-        messages.error(request, "You do not have permission to view this page.")
-        return redirect("accounts:dashboard")
+# ─────────────────────────────────────────────
+# USER MANAGEMENT (Admin / SuperAdmin)
+# ─────────────────────────────────────────────
 
-    users = User.objects.select_related("role").all().order_by("first_name")
+@login_required
+@role_required("super_admin", "admin")
+def user_list_view(request):
+    users = User.objects.select_related("role").order_by("-date_joined")
     return render(request, "accounts/user_list.html", {"users": users})
 
 
 @login_required
+@role_required("super_admin", "admin")
 def user_create_view(request):
-    if not request.user.is_staff_member():
-        messages.error(request, "You do not have permission to perform this action.")
-        return redirect("accounts:dashboard")
-
-    form = UserCreationForm(request.POST or None)
-    if request.method == "POST" and form.is_valid():
-        user = form.save()
-        log_action(request.user, "ACCOUNT_CREATED", description=f"Created user {user.email}", ip=get_client_ip(request))
-        messages.success(request, f"Account for {user.get_full_name()} created successfully.")
-        return redirect("accounts:user_list")
-
+    if request.method == "POST":
+        form = UserCreateForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.created_by = request.user
+            user.save()
+            AuditLog.objects.create(
+                user=request.user,
+                action=AuditLog.ACTION_CREATE,
+                target_model="User",
+                target_id=str(user.pk),
+                description=f"Created user {user.get_display_name()}.",
+                ip_address=request.META.get("REMOTE_ADDR"),
+            )
+            messages.success(
+                request, f"User {user.get_display_name()} created successfully.")
+            return redirect("accounts:user_list")
+    else:
+        form = UserCreateForm()
     return render(request, "accounts/user_form.html", {"form": form, "action": "Create"})
 
 
 @login_required
-def user_detail_view(request, pk):
-    if not request.user.is_staff_member():
-        messages.error(request, "You do not have permission to view this page.")
-        return redirect("accounts:dashboard")
+@role_required("super_admin", "admin")
+def user_edit_view(request, pk):
+    user = get_object_or_404(User, pk=pk)
+    if request.method == "POST":
+        form = UserEditForm(request.POST, request.FILES, instance=user)
+        if form.is_valid():
+            form.save()
+            AuditLog.objects.create(
+                user=request.user,
+                action=AuditLog.ACTION_UPDATE,
+                target_model="User",
+                target_id=str(user.pk),
+                description=f"Updated user {user.get_display_name()}.",
+                ip_address=request.META.get("REMOTE_ADDR"),
+            )
+            messages.success(request, "User updated successfully.")
+            return redirect("accounts:user_list")
+    else:
+        form = UserEditForm(instance=user)
+    return render(request, "accounts/user_form.html", {"form": form, "action": "Edit", "target_user": user})
 
-    target_user = get_object_or_404(User, pk=pk)
-    logs = AuditLog.objects.filter(user=target_user).order_by("-timestamp")[:20]
+
+@login_required
+@role_required("super_admin", "admin")
+def user_detail_view(request, pk):
+    target_user = get_object_or_404(
+        User.objects.select_related("role", "created_by"), pk=pk)
+    logs = AuditLog.objects.filter(
+        user=target_user).order_by("-timestamp")[:20]
     return render(request, "accounts/user_detail.html", {"target_user": target_user, "logs": logs})
 
-
-@login_required
-def user_edit_view(request, pk):
-    if not request.user.is_staff_member():
-        messages.error(request, "You do not have permission to perform this action.")
-        return redirect("accounts:dashboard")
-
-    target_user = get_object_or_404(User, pk=pk)
-    form = UserUpdateForm(request.POST or None, request.FILES or None, instance=target_user)
-    if request.method == "POST" and form.is_valid():
-        form.save()
-        messages.success(request, "User profile updated.")
-        return redirect("accounts:user_detail", pk=pk)
-    return render(request, "accounts/user_form.html", {"form": form, "action": "Edit", "target_user": target_user})
+# ─────────────────────────────────────────────
+# ROLE MANAGEMENT (SuperAdmin only)
+# ─────────────────────────────────────────────
 
 
 @login_required
-def assign_role_view(request, pk):
-    if not request.user.is_super_admin():
-        messages.error(request, "Only Super Admins can assign roles.")
-        return redirect("accounts:dashboard")
-
-    target_user = get_object_or_404(User, pk=pk)
-    form = AssignRoleForm(request.POST or None, instance=target_user)
-    if request.method == "POST" and form.is_valid():
-        form.save()
-        log_action(
-            request.user, "ROLE_ASSIGNED",
-            description=f"Assigned role '{target_user.role}' to {target_user.email}",
-            ip=get_client_ip(request),
-        )
-        messages.success(request, f"Role updated for {target_user.get_full_name()}.")
-        return redirect("accounts:user_detail", pk=pk)
-    return render(request, "accounts/assign_role.html", {"form": form, "target_user": target_user})
-
-
-@login_required
-def toggle_user_active_view(request, pk):
-    if not request.user.is_super_admin():
-        messages.error(request, "Only Super Admins can activate/deactivate accounts.")
-        return redirect("accounts:dashboard")
-
-    target_user = get_object_or_404(User, pk=pk)
-    target_user.is_active = not target_user.is_active
-    target_user.save(update_fields=["is_active"])
-    action = "ACCOUNT_ACTIVATED" if target_user.is_active else "ACCOUNT_DEACTIVATED"
-    log_action(request.user, action, description=f"User: {target_user.email}", ip=get_client_ip(request))
-    status = "activated" if target_user.is_active else "deactivated"
-    messages.success(request, f"Account {status} successfully.")
-    return redirect("accounts:user_detail", pk=pk)
-
-
-# ── Role Management (SuperAdmin only) ────────────────────────────────────────
-@login_required
-@user_passes_test(is_super_admin, login_url="/accounts/login/")
+@role_required("super_admin")
 def role_list_view(request):
-    roles = Role.objects.annotate_user_count() if hasattr(Role.objects, "annotate_user_count") else Role.objects.all()
-    roles = Role.objects.all().order_by("name")
+    roles = Role.objects.prefetch_related(
+        "permissions", "users").order_by("name")
     return render(request, "accounts/role_list.html", {"roles": roles})
 
 
 @login_required
-@user_passes_test(is_super_admin, login_url="/accounts/login/")
+@role_required("super_admin")
 def role_create_view(request):
-    form = RoleForm(request.POST or None)
-    if request.method == "POST" and form.is_valid():
-        form.save()
-        messages.success(request, "Role created successfully.")
-        return redirect("accounts:role_list")
+    if request.method == "POST":
+        form = RoleForm(request.POST)
+        if form.is_valid():
+            role = form.save()
+            AuditLog.objects.create(
+                user=request.user,
+                action=AuditLog.ACTION_CREATE,
+                target_model="Role",
+                target_id=str(role.pk),
+                description=f"Created role '{role.name}'.",
+                ip_address=request.META.get("REMOTE_ADDR"),
+            )
+            messages.success(request, f"Role '{role.name}' created.")
+            return redirect("accounts:role_list")
+    else:
+        form = RoleForm()
     return render(request, "accounts/role_form.html", {"form": form, "action": "Create"})
 
 
 @login_required
-@user_passes_test(is_super_admin, login_url="/accounts/login/")
+@role_required("super_admin")
 def role_edit_view(request, pk):
     role = get_object_or_404(Role, pk=pk)
-    form = RoleForm(request.POST or None, instance=role)
-    if request.method == "POST" and form.is_valid():
-        form.save()
-        messages.success(request, "Role updated successfully.")
+    if role.is_system_role:
+        messages.warning(request, "System roles cannot be edited.")
         return redirect("accounts:role_list")
+    if request.method == "POST":
+        form = RoleForm(request.POST, instance=role)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Role '{role.name}' updated.")
+            return redirect("accounts:role_list")
+    else:
+        form = RoleForm(instance=role)
     return render(request, "accounts/role_form.html", {"form": form, "action": "Edit", "role": role})
 
 
 @login_required
-@user_passes_test(is_super_admin, login_url="/accounts/login/")
+@role_required("super_admin")
 def role_delete_view(request, pk):
     role = get_object_or_404(Role, pk=pk)
+    if role.is_system_role:
+        messages.error(request, "System roles cannot be deleted.")
+        return redirect("accounts:role_list")
     if request.method == "POST":
-        if role.users.exists():
-            messages.error(request, "Cannot delete a role that is assigned to users.")
-        else:
-            role.delete()
-            messages.success(request, "Role deleted.")
+        name = role.name
+        role.delete()
+        messages.success(request, f"Role '{name}' deleted.")
         return redirect("accounts:role_list")
     return render(request, "accounts/role_confirm_delete.html", {"role": role})

@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}{% endblock %} | {{ SACCO_NAME|default:"SACCO" }}</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+
+  <style>
+    :root {
+      --sacco-green:       #1a6b3c;
+      --sacco-green-dark:  #0f4526;
+      --sacco-green-light: #e8f5ee;
+      --sacco-green-mid:   #2d9259;
+      --sacco-accent:      #f0faf4;
+      --sacco-black:       #0d0d0d;
+      --sacco-gray:        #6b7280;
+      --sacco-border:      #e2e8f0;
+      --sacco-white:       #ffffff;
+      --sacco-danger:      #dc2626;
+      --sacco-warning:     #d97706;
+      --sacco-info:        #0284c7;
+      --sidebar-width:     260px;
+      --topbar-height:     64px;
+      --font-main:         'Plus Jakarta Sans', sans-serif;
+      --font-mono:         'DM Mono', monospace;
+      --radius-sm:         6px;
+      --radius-md:         10px;
+      --radius-lg:         16px;
+      --shadow-sm:         0 1px 3px rgba(0,0,0,.08);
+      --shadow-md:         0 4px 16px rgba(0,0,0,.10);
+      --shadow-lg:         0 8px 32px rgba(0,0,0,.12);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      font-family: var(--font-main);
+      background: #f4f7f5;
+      color: var(--sacco-black);
+      font-size: 0.9rem;
+    }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      width: var(--sidebar-width);
+      background: var(--sacco-green-dark);
+      display: flex;
+      flex-direction: column;
+      z-index: 1040;
+      transition: transform .3s ease, width .3s ease;
+      overflow-x: hidden;
+    }
+
+    .sidebar-brand {
+      height: var(--topbar-height);
+      display: flex;
+      align-items: center;
+      padding: 0 1.25rem;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      gap: .75rem;
+      text-decoration: none;
+    }
+    .sidebar-brand-icon {
+      width: 36px; height: 36px;
+      background: var(--sacco-green-mid);
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; color: #fff; flex-shrink: 0;
+    }
+    .sidebar-brand-text {
+      color: #fff;
+      font-weight: 700;
+      font-size: .95rem;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    .sidebar-brand-text small {
+      display: block;
+      font-weight: 400;
+      font-size: .7rem;
+      color: rgba(255,255,255,.5);
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+
+    .sidebar-nav { flex: 1; overflow-y: auto; padding: .75rem 0; }
+
+    .sidebar-section {
+      padding: .5rem 1.25rem .25rem;
+      font-size: .65rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.3);
+    }
+
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      padding: .6rem 1.25rem;
+      color: rgba(255,255,255,.7);
+      text-decoration: none;
+      font-size: .875rem;
+      font-weight: 500;
+      border-left: 3px solid transparent;
+      transition: all .18s ease;
+      margin: 1px 0;
+    }
+    .sidebar-link i { font-size: 1rem; flex-shrink: 0; }
+    .sidebar-link:hover {
+      color: #fff;
+      background: rgba(255,255,255,.07);
+      border-left-color: rgba(255,255,255,.3);
+    }
+    .sidebar-link.active {
+      color: #fff;
+      background: rgba(255,255,255,.12);
+      border-left-color: #6ee7a0;
+    }
+    .sidebar-link .badge {
+      margin-left: auto;
+      font-size: .65rem;
+    }
+
+    .sidebar-footer {
+      padding: 1rem 1.25rem;
+      border-top: 1px solid rgba(255,255,255,.08);
+    }
+    .sidebar-user {
+      display: flex; align-items: center; gap: .75rem;
+    }
+    .sidebar-avatar {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      background: var(--sacco-green-mid);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 700; font-size: .85rem;
+      overflow: hidden; flex-shrink: 0;
+    }
+    .sidebar-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .sidebar-user-info { overflow: hidden; }
+    .sidebar-user-name {
+      color: #fff; font-size: .82rem; font-weight: 600;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .sidebar-user-role {
+      color: rgba(255,255,255,.45); font-size: .7rem;
+    }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      position: fixed;
+      top: 0; left: var(--sidebar-width); right: 0;
+      height: var(--topbar-height);
+      background: var(--sacco-white);
+      border-bottom: 1px solid var(--sacco-border);
+      display: flex; align-items: center;
+      padding: 0 1.5rem;
+      gap: 1rem;
+      z-index: 1030;
+      transition: left .3s ease;
+    }
+
+    .topbar-toggle {
+      display: none;
+      background: none; border: none;
+      font-size: 1.25rem; color: var(--sacco-gray);
+      padding: .25rem; cursor: pointer;
+    }
+
+    .topbar-title {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--sacco-black);
+      flex: 1;
+    }
+
+    .topbar-actions { display: flex; align-items: center; gap: .5rem; }
+
+    .topbar-btn {
+      width: 36px; height: 36px;
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      background: none; border: 1px solid var(--sacco-border);
+      color: var(--sacco-gray); font-size: 1rem;
+      cursor: pointer; text-decoration: none;
+      transition: all .15s ease;
+      position: relative;
+    }
+    .topbar-btn:hover {
+      background: var(--sacco-green-light);
+      border-color: var(--sacco-green);
+      color: var(--sacco-green);
+    }
+    .topbar-btn .dot {
+      position: absolute; top: 5px; right: 5px;
+      width: 7px; height: 7px;
+      background: var(--sacco-danger);
+      border-radius: 50%; border: 1.5px solid #fff;
+    }
+
+    /* ── MAIN CONTENT ── */
+    .main-content {
+      margin-left: var(--sidebar-width);
+      padding-top: var(--topbar-height);
+      min-height: 100vh;
+      transition: margin-left .3s ease;
+    }
+    .content-body { padding: 1.75rem; }
+
+    /* ── PAGE HEADER ── */
+    .page-header {
+      display: flex; align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap; gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .page-header-title {
+      font-size: 1.4rem; font-weight: 800;
+      color: var(--sacco-black); margin: 0;
+      line-height: 1.2;
+    }
+    .page-header-subtitle {
+      font-size: .82rem; color: var(--sacco-gray); margin-top: .25rem;
+    }
+
+    /* ── BREADCRUMB ── */
+    .breadcrumb-nav { margin-bottom: 1rem; }
+    .breadcrumb-nav .breadcrumb {
+      background: none; padding: 0; margin: 0; font-size: .8rem;
+    }
+    .breadcrumb-item a { color: var(--sacco-green); text-decoration: none; }
+    .breadcrumb-item.active { color: var(--sacco-gray); }
+
+    /* ── CARDS ── */
+    .card {
+      border: 1px solid var(--sacco-border);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      background: var(--sacco-white);
+    }
+    .card-header {
+      background: none;
+      border-bottom: 1px solid var(--sacco-border);
+      padding: 1rem 1.25rem;
+      font-weight: 700;
+      font-size: .9rem;
+    }
+
+    /* ── STAT CARDS ── */
+    .stat-card {
+      background: var(--sacco-white);
+      border: 1px solid var(--sacco-border);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      box-shadow: var(--shadow-sm);
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    .stat-card-icon {
+      width: 44px; height: 44px;
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; margin-bottom: .75rem;
+    }
+    .stat-card-icon.green  { background: var(--sacco-green-light); color: var(--sacco-green); }
+    .stat-card-icon.black  { background: #f1f1f1; color: var(--sacco-black); }
+    .stat-card-icon.amber  { background: #fef3c7; color: var(--sacco-warning); }
+    .stat-card-icon.blue   { background: #e0f2fe; color: var(--sacco-info); }
+    .stat-card-value {
+      font-size: 1.6rem; font-weight: 800; line-height: 1;
+      color: var(--sacco-black); margin-bottom: .25rem;
+    }
+    .stat-card-label { font-size: .78rem; color: var(--sacco-gray); font-weight: 500; }
+
+    /* ── TABLES ── */
+    .table-card .table { margin: 0; }
+    .table thead th {
+      font-size: .75rem;
+      font-weight: 700;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      color: var(--sacco-gray);
+      border-bottom: 1px solid var(--sacco-border);
+      padding: .75rem 1rem;
+      background: #fafafa;
+    }
+    .table tbody td {
+      padding: .75rem 1rem;
+      vertical-align: middle;
+      border-color: var(--sacco-border);
+      font-size: .875rem;
+    }
+    .table tbody tr:hover { background: var(--sacco-accent); }
+
+    /* ── BADGES ── */
+    .badge-status {
+      padding: .3em .7em;
+      border-radius: 99px;
+      font-size: .7rem;
+      font-weight: 600;
+      letter-spacing: .03em;
+    }
+    .badge-active    { background: #dcfce7; color: #166534; }
+    .badge-inactive  { background: #f1f5f9; color: #475569; }
+    .badge-pending   { background: #fef9c3; color: #854d0e; }
+    .badge-suspended { background: #fee2e2; color: #991b1b; }
+
+    /* ── BUTTONS ── */
+    .btn-sacco {
+      background: var(--sacco-green);
+      color: #fff; border: none;
+      font-weight: 600; font-size: .875rem;
+      border-radius: var(--radius-sm);
+      padding: .5rem 1.1rem;
+      transition: background .15s ease;
+    }
+    .btn-sacco:hover { background: var(--sacco-green-dark); color: #fff; }
+    .btn-sacco-outline {
+      background: none;
+      border: 1px solid var(--sacco-green);
+      color: var(--sacco-green);
+      font-weight: 600; font-size: .875rem;
+      border-radius: var(--radius-sm);
+      padding: .5rem 1.1rem;
+      transition: all .15s ease;
+    }
+    .btn-sacco-outline:hover {
+      background: var(--sacco-green);
+      color: #fff;
+    }
+
+    /* ── FORMS ── */
+    .form-control, .form-select {
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--sacco-border);
+      font-size: .875rem;
+      padding: .5rem .85rem;
+      transition: border-color .15s ease, box-shadow .15s ease;
+    }
+    .form-control:focus, .form-select:focus {
+      border-color: var(--sacco-green);
+      box-shadow: 0 0 0 3px rgba(26, 107, 60, .12);
+    }
+    .form-label {
+      font-size: .8rem; font-weight: 600;
+      color: var(--sacco-black); margin-bottom: .35rem;
+    }
+
+    /* ── ALERTS ── */
+    .alert { border-radius: var(--radius-sm); font-size: .875rem; border: none; }
+    .alert-success { background: #dcfce7; color: #166534; }
+    .alert-danger  { background: #fee2e2; color: #991b1b; }
+    .alert-warning { background: #fef9c3; color: #854d0e; }
+    .alert-info    { background: #e0f2fe; color: #075985; }
+
+    /* ── MOBILE OVERLAY ── */
+    .sidebar-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.5);
+      z-index: 1039;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 991.98px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      .sidebar.open {
+        transform: translateX(0);
+      }
+      .sidebar-overlay.open { display: block; }
+      .topbar { left: 0; }
+      .topbar-toggle { display: flex; align-items: center; }
+      .main-content { margin-left: 0; }
+      .content-body { padding: 1rem; }
+    }
+
+    @media (max-width: 575.98px) {
+      .page-header-title { font-size: 1.1rem; }
+      .stat-card-value { font-size: 1.3rem; }
+    }
+  </style>
+
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- Sidebar Overlay (mobile) -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <a class="sidebar-brand" href="{% url 'accounts:dashboard_redirect' %}">
+    <div class="sidebar-brand-icon"><i class="bi bi-bank2"></i></div>
+    <div class="sidebar-brand-text">
+      {{ SACCO_NAME|default:"SACCO" }}
+      <small>Management System</small>
+    </div>
+  </a>
+
+  <nav class="sidebar-nav">
+    {% block sidebar_nav %}{% endblock %}
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="sidebar-avatar">
+        {% if user.profile_photo %}
+          <img src="{{ user.profile_photo.url }}" alt="Avatar" />
+        {% else %}
+          {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+        {% endif %}
+      </div>
+      <div class="sidebar-user-info">
+        <div class="sidebar-user-name">{{ user.get_display_name }}</div>
+        <div class="sidebar-user-role">{{ user.role.name|default:"No Role" }}</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <button class="topbar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+    <i class="bi bi-list"></i>
+  </button>
+  <div class="topbar-title">{% block topbar_title %}{% endblock %}</div>
+  <div class="topbar-actions">
+    <a href="#" class="topbar-btn" title="Notifications">
+      <i class="bi bi-bell"></i>
+      <span class="dot"></span>
+    </a>
+    <a href="{% url 'accounts:profile' %}" class="topbar-btn" title="Profile">
+      <i class="bi bi-person"></i>
+    </a>
+    <form method="post" action="{% url 'accounts:logout' %}" class="d-inline">
+      {% csrf_token %}
+      <button type="submit" class="topbar-btn" title="Sign out">
+        <i class="bi bi-box-arrow-right"></i>
+      </button>
+    </form>
+  </div>
+</header>
+
+<!-- MAIN CONTENT -->
+<main class="main-content">
+  <div class="content-body">
+
+    <!-- Messages -->
+    {% if messages %}
+      <div class="mb-3">
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+  </div>
+</main>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Alpine.js -->
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<script>
+  // Sidebar toggle
+  const sidebar  = document.getElementById('sidebar');
+  const overlay  = document.getElementById('sidebarOverlay');
+  const toggle   = document.getElementById('sidebarToggle');
+
+  function openSidebar()  { sidebar.classList.add('open'); overlay.classList.add('open'); }
+  function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('open'); }
+
+  toggle?.addEventListener('click', () => sidebar.classList.contains('open') ? closeSidebar() : openSidebar());
+  overlay?.addEventListener('click', closeSidebar);
+</script>
+
+{% block extra_js %}{% endblock %}
+</body>
+</html>

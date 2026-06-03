@@ -1,0 +1,55 @@
+{% extends "base/base.html" %}
+{% block title %}My Profile{% endblock %}
+{% block topbar_title %}My Profile{% endblock %}
+
+{% block sidebar_nav %}
+  {% if user.portal == "super_admin" %}{% include "base/superadmin_base.html" %}
+  {% elif user.portal == "staff" %}{% include "base/staff_base.html" %}
+  {% else %}{% include "base/member_base.html" %}{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-8">
+    <div class="card">
+      <div class="card-header">Edit Profile</div>
+      <div class="card-body p-4">
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="row g-3">
+            <div class="col-sm-6">
+              <label class="form-label">First Name</label>
+              {{ form.first_name }}
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label">Last Name</label>
+              {{ form.last_name }}
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label">Phone Number</label>
+              {{ form.phone_number }}
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label">Date of Birth</label>
+              {{ form.date_of_birth }}
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label">Gender</label>
+              {{ form.gender }}
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label">Profile Photo</label>
+              {{ form.profile_photo }}
+            </div>
+          </div>
+          <hr class="my-4" />
+          <div class="d-flex gap-2 justify-content-end">
+            <a href="{% url 'accounts:dashboard_redirect' %}" class="btn btn-sacco-outline">Cancel</a>
+            <button type="submit" class="btn btn-sacco">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

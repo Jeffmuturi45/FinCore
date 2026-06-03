@@ -1,0 +1,20 @@
+{% extends "base/base.html" %}
+
+{% block sidebar_nav %}
+  <span class="sidebar-section">Main</span>
+  <a href="{% url 'accounts:staff_dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'staff_dashboard' %}active{% endif %}">
+    <i class="bi bi-grid-1x2"></i> Dashboard
+  </a>
+
+  <span class="sidebar-section mt-2">Members</span>
+  <a href="#" class="sidebar-link"><i class="bi bi-person-badge"></i> Members</a>
+  <a href="#" class="sidebar-link"><i class="bi bi-file-earmark-person"></i> KYC Verification</a>
+
+  <span class="sidebar-section mt-2">Finance</span>
+  <a href="#" class="sidebar-link"><i class="bi bi-piggy-bank"></i> Savings</a>
+  <a href="#" class="sidebar-link"><i class="bi bi-cash-stack"></i> Loans</a>
+  <a href="#" class="sidebar-link"><i class="bi bi-arrow-left-right"></i> Transactions</a>
+
+  <span class="sidebar-section mt-2">Reports</span>
+  <a href="#" class="sidebar-link"><i class="bi bi-bar-chart-line"></i> Reports</a>
+{% endblock %}

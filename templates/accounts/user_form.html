@@ -1,0 +1,93 @@
+{% extends "base/superadmin_base.html" %}
+{% block title %}{{ action }} User{% endblock %}
+{% block topbar_title %}{{ action }} User{% endblock %}
+
+{% block content %}
+<nav class="breadcrumb-nav">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{% url 'accounts:user_list' %}">Users</a></li>
+    <li class="breadcrumb-item active">{{ action }}</li>
+  </ol>
+</nav>
+
+<div class="row justify-content-center">
+  <div class="col-12 col-xl-8">
+    <div class="card">
+      <div class="card-header">{{ action }} User Account</div>
+      <div class="card-body p-4">
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="row g-3">
+            <div class="col-sm-6">
+              <label class="form-label">First Name *</label>
+              {{ form.first_name }}
+              {% if form.first_name.errors %}<div class="text-danger" style="font-size:.78rem;">{{ form.first_name.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label">Last Name *</label>
+              {{ form.last_name }}
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label">Email Address *</label>
+              {{ form.email }}
+              {% if form.email.errors %}<div class="text-danger" style="font-size:.78rem;">{{ form.email.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label">Username *</label>
+              {{ form.username }}
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label">Phone Number</label>
+              {{ form.phone_number }}
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label">ID / Passport Number</label>
+              {{ form.id_number }}
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label">Date of Birth</label>
+              {{ form.date_of_birth }}
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label">Gender</label>
+              {{ form.gender }}
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label">Role *</label>
+              {{ form.role }}
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label">Status</label>
+              {{ form.status }}
+            </div>
+            {% if form.password1 %}
+            <div class="col-sm-6">
+              <label class="form-label">Password *</label>
+              {{ form.password1 }}
+              {% if form.password1.errors %}<div class="text-danger" style="font-size:.78rem;">{{ form.password1.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label">Confirm Password *</label>
+              {{ form.password2 }}
+              {% if form.password2.errors %}<div class="text-danger" style="font-size:.78rem;">{{ form.password2.errors.0 }}</div>{% endif %}
+            </div>
+            {% endif %}
+            {% if form.profile_photo %}
+            <div class="col-12">
+              <label class="form-label">Profile Photo</label>
+              {{ form.profile_photo }}
+            </div>
+            {% endif %}
+          </div>
+
+          <hr class="my-4" />
+          <div class="d-flex gap-2 justify-content-end">
+            <a href="{% url 'accounts:user_list' %}" class="btn btn-sacco-outline">Cancel</a>
+            <button type="submit" class="btn btn-sacco">{{ action }} User</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "base/superadmin_base.html" %}
+{% block title %}Roles{% endblock %}
+{% block topbar_title %}Roles & Permissions{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-header-title">Roles</h1>
+    <p class="page-header-subtitle">Manage system roles and their permissions</p>
+  </div>
+  <a href="{% url 'accounts:role_create' %}" class="btn btn-sacco">
+    <i class="bi bi-plus-lg me-1"></i> Add Role
+  </a>
+</div>
+
+<div class="row g-3">
+  {% for role in roles %}
+  <div class="col-12 col-md-6 col-xl-4">
+    <div class="card p-3" style="border-left: 4px solid {% if role.is_system_role %}#1a6b3c{% else %}#64748b{% endif %};">
+      <div class="d-flex align-items-start justify-content-between">
+        <div>
+          <h6 class="fw-bold mb-0">{{ role.name }}</h6>
+          <p class="text-muted mb-2" style="font-size:.78rem;">{{ role.description|default:"No description" }}</p>
+          <div class="d-flex gap-1 flex-wrap">
+            {% if role.is_system_role %}
+              <span class="badge" style="background:#e8f5ee;color:#1a6b3c;border-radius:99px;">System</span>
+            {% endif %}
+            {% if role.is_staff_role %}
+              <span class="badge" style="background:#e0f2fe;color:#075985;border-radius:99px;">Staff</span>
+            {% else %}
+              <span class="badge" style="background:#f1f5f9;color:#475569;border-radius:99px;">Member</span>
+            {% endif %}
+            <span class="badge" style="background:#f1f5f9;color:#475569;border-radius:99px;">
+              {{ role.users.count }} user{{ role.users.count|pluralize }}
+            </span>
+          </div>
+        </div>
+        {% if not role.is_system_role %}
+        <div class="d-flex gap-1">
+          <a href="{% url 'accounts:role_edit' role.pk %}" class="topbar-btn" title="Edit"><i class="bi bi-pencil"></i></a>
+          <a href="{% url 'accounts:role_delete' role.pk %}" class="topbar-btn" title="Delete" style="border-color:#fee2e2;color:#dc2626;"><i class="bi bi-trash"></i></a>
+        </div>
+        {% else %}
+        <span title="System role — protected" style="color:#9ca3af;font-size:.8rem;"><i class="bi bi-lock-fill"></i></span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="col-12">
+    <div class="card p-5 text-center text-muted" style="border-style:dashed;">
+      No roles found. <a href="{% url 'accounts:role_create' %}">Create one</a>.
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

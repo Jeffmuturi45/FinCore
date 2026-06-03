@@ -1,0 +1,29 @@
+{% extends "base/superadmin_base.html" %}
+{% block title %}Delete Role{% endblock %}
+{% block topbar_title %}Delete Role{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-6 col-lg-5">
+    <div class="card p-4 text-center">
+      <div style="width:56px;height:56px;background:#fee2e2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-size:1.4rem;color:#dc2626;">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+      </div>
+      <h5 class="fw-bold">Delete Role</h5>
+      <p class="text-muted" style="font-size:.875rem;">
+        Are you sure you want to delete <strong>{{ role.name }}</strong>?
+        This will remove the role from all users assigned to it.
+      </p>
+      <div class="d-flex gap-2 justify-content-center mt-3">
+        <a href="{% url 'accounts:role_list' %}" class="btn btn-sacco-outline">Cancel</a>
+        <form method="post" class="d-inline">
+          {% csrf_token %}
+          <button type="submit" class="btn" style="background:#dc2626;color:#fff;font-weight:600;border-radius:6px;padding:.5rem 1.1rem;">
+            Yes, Delete
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In | {{ SACCO_NAME|default:"SACCO" }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+  <style>
+    :root {
+      --green:       #1a6b3c;
+      --green-dark:  #0f4526;
+      --green-mid:   #2d9259;
+      --green-light: #e8f5ee;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      background: #f4f7f5;
+    }
+
+    /* ── LEFT PANEL ── */
+    .login-panel-left {
+      width: 45%;
+      background: var(--green-dark);
+      display: flex; flex-direction: column;
+      padding: 3rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .login-panel-left::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(circle at 80% 20%, rgba(45,146,89,.35) 0%, transparent 60%),
+                  radial-gradient(circle at 10% 80%, rgba(26,107,60,.4) 0%, transparent 50%);
+    }
+    .login-brand { position: relative; z-index: 1; }
+    .login-brand-mark {
+      width: 48px; height: 48px;
+      background: var(--green-mid);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; color: #fff; margin-bottom: 1rem;
+    }
+    .login-brand-name {
+      font-size: 1.3rem; font-weight: 800; color: #fff;
+    }
+    .login-brand-sub {
+      font-size: .78rem; color: rgba(255,255,255,.5);
+      letter-spacing: .1em; text-transform: uppercase; margin-top: .2rem;
+    }
+    .login-hero { position: relative; z-index: 1; margin-top: auto; }
+    .login-hero-title {
+      font-size: 2rem; font-weight: 800; color: #fff;
+      line-height: 1.2; margin-bottom: 1rem;
+    }
+    .login-hero-title span { color: #6ee7a0; }
+    .login-hero-body {
+      font-size: .9rem; color: rgba(255,255,255,.6); line-height: 1.6;
+    }
+    .login-dots {
+      position: absolute; bottom: 2rem; left: 3rem;
+      display: flex; gap: .5rem; z-index: 1;
+    }
+    .login-dots span {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: rgba(255,255,255,.2);
+    }
+    .login-dots span.active { background: #6ee7a0; width: 24px; border-radius: 4px; }
+
+    /* ── RIGHT PANEL ── */
+    .login-panel-right {
+      flex: 1;
+      display: flex; align-items: center; justify-content: center;
+      padding: 2rem;
+    }
+    .login-card {
+      width: 100%; max-width: 420px;
+    }
+    .login-card-header {
+      margin-bottom: 2rem;
+    }
+    .login-card-title {
+      font-size: 1.6rem; font-weight: 800; color: #0d0d0d; margin: 0 0 .4rem;
+    }
+    .login-card-sub {
+      font-size: .875rem; color: #6b7280;
+    }
+
+    .form-label { font-size: .8rem; font-weight: 600; margin-bottom: .35rem; }
+    .form-control {
+      border-radius: 8px;
+      border: 1.5px solid #e2e8f0;
+      padding: .65rem .9rem;
+      font-size: .9rem;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .form-control:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(26,107,60,.12);
+    }
+    .input-group .form-control { border-right: none; }
+    .input-group .btn-pwd-toggle {
+      border: 1.5px solid #e2e8f0;
+      border-left: none;
+      border-radius: 0 8px 8px 0;
+      background: #fff; color: #9ca3af;
+      padding: 0 .85rem; cursor: pointer;
+      transition: color .15s;
+    }
+    .input-group .btn-pwd-toggle:hover { color: var(--green); }
+
+    .btn-login {
+      background: var(--green);
+      color: #fff; border: none;
+      width: 100%; padding: .75rem;
+      font-weight: 700; font-size: .95rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background .15s;
+      margin-top: .25rem;
+    }
+    .btn-login:hover { background: var(--green-dark); }
+
+    .login-footer {
+      text-align: center;
+      margin-top: 2rem;
+      font-size: .78rem; color: #9ca3af;
+    }
+
+    /* Responsive — stack on small screens */
+    @media (max-width: 767.98px) {
+      body { flex-direction: column; }
+      .login-panel-left { width: 100%; min-height: auto; padding: 2rem; }
+      .login-hero { display: none; }
+      .login-dots { display: none; }
+      .login-panel-right { padding: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LEFT -->
+<div class="login-panel-left">
+  <div class="login-brand">
+    <div class="login-brand-mark"><i class="bi bi-bank2"></i></div>
+    <div class="login-brand-name">{{ SACCO_NAME|default:"SACCO" }}</div>
+    <div class="login-brand-sub">Management System</div>
+  </div>
+
+  <div class="login-hero">
+    <h1 class="login-hero-title">
+      Smart <span>financial</span><br/>tools for your<br/>community.
+    </h1>
+    <p class="login-hero-body">
+      Manage savings, loans, and member accounts — all in one secure platform built for Kenya's cooperatives.
+    </p>
+  </div>
+
+  <div class="login-dots">
+    <span class="active"></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+
+<!-- RIGHT -->
+<div class="login-panel-right">
+  <div class="login-card">
+    <div class="login-card-header">
+      <h2 class="login-card-title">Welcome back</h2>
+      <p class="login-card-sub">Sign in to your account to continue</p>
+    </div>
+
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger mb-3" style="font-size:.875rem;border-radius:8px;">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        {{ form.non_field_errors.0 }}
+      </div>
+    {% endif %}
+
+    <form method="post">
+      {% csrf_token %}
+
+      <div class="mb-3">
+        <label class="form-label" for="{{ form.username.id_for_label }}">Email Address</label>
+        {{ form.username }}
+        {% if form.username.errors %}
+          <div class="invalid-feedback d-block" style="font-size:.78rem;">{{ form.username.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="id_password">Password</label>
+        <div class="input-group">
+          {{ form.password }}
+          <button type="button" class="btn-pwd-toggle" id="pwdToggle">
+            <i class="bi bi-eye" id="pwdIcon"></i>
+          </button>
+        </div>
+        {% if form.password.errors %}
+          <div class="invalid-feedback d-block" style="font-size:.78rem;">{{ form.password.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="form-check">
+          {{ form.remember_me }}
+          <label class="form-check-label" for="{{ form.remember_me.id_for_label }}" style="font-size:.82rem;">
+            Keep me signed in
+          </label>
+        </div>
+        <a href="#" style="font-size:.82rem; color: var(--green); text-decoration:none; font-weight:600;">
+          Forgot password?
+        </a>
+      </div>
+
+      <button type="submit" class="btn-login">Sign In</button>
+    </form>
+
+    <div class="login-footer">
+      <i class="bi bi-shield-lock me-1"></i>
+      Secured connection &nbsp;·&nbsp; {{ SACCO_NAME|default:"SACCO" }} &copy; {% now "Y" %}
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  const pwdInput  = document.getElementById('id_password');
+  const pwdToggle = document.getElementById('pwdToggle');
+  const pwdIcon   = document.getElementById('pwdIcon');
+  pwdToggle?.addEventListener('click', () => {
+    const isText = pwdInput.type === 'text';
+    pwdInput.type = isText ? 'password' : 'text';
+    pwdIcon.className = isText ? 'bi bi-eye' : 'bi bi-eye-slash';
+  });
+</script>
+</body>
+</html>
